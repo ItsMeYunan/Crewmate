@@ -1,0 +1,1604 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Crewmate — Manager Helper</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --ink:#000000;
+  --ink-soft:#3a3a37;
+  --muted:#8a8a84;
+  --line:#e0e0da;
+  --paper:#faf9f6;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,"SFMono-Regular","Cascadia Mono","Consolas","Liberation Mono",monospace;
+}
+*{box-sizing:border-box;}
+
+/* Mencegah pergeseran pixel antar tab */
+html{
+  scrollbar-gutter: stable;
+}
+html,body{min-height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Custom Scrollbar Ramping & Modern */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4ce;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8a8a84;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4ce transparent;
+}
+
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+h1,h2,h3,h4{margin:0;font-weight:600;}
+p{margin:0;}
+::selection{background:#000;color:#fff;}
+:focus-visible{outline:2px solid #000;outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+.app-shell{display:flex;flex-direction:column;min-height:100vh;padding-bottom:88px;}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap;}
+.brand{display:flex;flex-direction:column;line-height:1.15;}
+.brand-mark{font-family:var(--font-mono);font-weight:700;font-size:19px;letter-spacing:2px;}
+.ops-panel{display:flex;align-items:stretch;border:1px solid var(--line);}
+.clock-block{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:8px 18px;background:var(--bg);border:none;cursor:pointer;text-align:left;}
+.clock-block:hover{background:var(--paper);}
+.clock-label{font-size:10px;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;}
+.clock-time{font-family:var(--font-mono);font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:.5px;}
+.ops-divider{width:1px;background:var(--line);}
+.icon-btn{display:flex;align-items:center;justify-content:center;width:42px;background:var(--bg);border:none;border-left:1px solid var(--line);cursor:pointer;color:var(--ink);}
+.icon-btn:hover{background:var(--paper);}
+.icon-btn svg{width:18px;height:18px;}
+
+/* Content */
+.content{flex:1;padding:32px 28px;max-width:980px;width:100%;margin:0 auto;}
+.view-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:14px;flex-wrap:wrap;}
+.view-head h2{font-size:22px;}
+.view-head .hint{font-size:12px;color:var(--muted);margin-top:5px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;}
+.btn:hover{background:#222;}
+.btn.secondary{background:var(--bg);color:var(--ink);}
+.btn.secondary:hover{background:var(--paper);}
+.btn.ghost{border-color:var(--line);background:transparent;color:var(--ink-soft);}
+.btn.ghost:hover{border-color:var(--ink);color:var(--ink);}
+.btn.small{padding:5px 10px;font-size:12px;}
+
+/* Dashboard */
+.stat-strip{display:flex;border:1px solid var(--line);margin-bottom:28px;flex-wrap:wrap;}
+.stat{flex:1;min-width:130px;padding:16px 18px;border-right:1px solid var(--line);}
+.stat:last-child{border-right:none;}
+.stat-num{font-family:var(--font-mono);font-size:28px;font-weight:700;}
+.stat-label{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.4px;}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+@media (max-width:720px){.dash-grid{grid-template-columns:1fr;}}
+.dash-panel h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;font-weight:600;}
+.mini-list{display:flex;flex-direction:column;border-top:1px solid var(--line);}
+.mini-row{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px;}
+.mini-row .t{color:var(--muted);font-family:var(--font-mono);font-size:11px;white-space:nowrap;}
+
+/* Empty state */
+.empty{border:1px dashed var(--line);padding:38px 24px;text-align:center;color:var(--muted);}
+.empty p{margin-bottom:16px;font-size:13px;max-width:360px;margin-left:auto;margin-right:auto;}
+
+/* Icon buttons & Badges */
+.iconbtn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);text-decoration:none;}
+.iconbtn:hover{border-color:#000;}
+.iconbtn svg{width:14px;height:14px;}
+
+.iconbtn-subtle{background:none;border:none;cursor:pointer;padding:4px;color:var(--ink);display:flex;align-items:center;justify-content:center;border-radius:2px;}
+.iconbtn-subtle:hover{background:var(--paper);}
+.iconbtn-subtle svg{width:16px;height:16px;}
+
+.badge{display:inline-flex;align-items:center;padding:3px 8px;font-size:11px;font-weight:500;border:1px solid var(--line);border-radius:2px;white-space:nowrap;}
+.badge.aktif{background:#000;color:#fff;border-color:#000;}
+.badge.hiatus{background:#faf9f6;color:#555;border-color:#ccc;}
+.badge.lulus{background:#fff;color:#888;border-style:dashed;}
+.badge.deal{background:#000;color:#fff;border-color:#000;}
+.badge.pending{background:#faf9f6;color:#333;border-color:#999;}
+.badge.negosiasi{background:#f0efe9;color:#000;border-color:#666;font-weight:600;}
+.badge.selesai{background:#fff;color:#444;border-color:#999;}
+.badge.batal{background:#fff;color:#999;border-style:dashed;}
+
+.pinned-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 6px;border:1px solid #000;background:#fff;color:#000;border-radius:2px;letter-spacing:0.5px;}
+.pinned-badge svg{width:10px;height:10px;}
+
+/* =========================================================
+   DRAG & DROP STYLING
+   ========================================================= */
+[data-draggable="true"]{
+  cursor: grab;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+[data-draggable="true"].dragging{
+  opacity: 0.35 !important;
+  transform: scale(0.98);
+  border: 1.5px dashed #000 !important;
+}
+[data-draggable="true"].drag-over{
+  border-color: #000 !important;
+  box-shadow: 0 0 0 2px #000 !important;
+  background: var(--paper) !important;
+}
+.drag-handle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  color:var(--muted);
+  width:24px;
+  height:24px;
+}
+.drag-handle:active{cursor:grabbing;}
+.drag-handle svg{width:14px;height:14px;}
+
+/* =========================================================
+   CREW (ROSTER TALENT) - CARD DESIGN
+   ========================================================= */
+.crew-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
+.crew-card{border:1px solid var(--line);background:#fff;padding:20px;display:flex;flex-direction:column;gap:14px;transition:border-color 0.15s, box-shadow 0.15s;}
+.crew-card:hover{border-color:#000;box-shadow:0 4px 12px rgba(0,0,0,0.04);}
+.crew-card.is-pinned{border-color:#000;background:#fafafa;}
+.crew-card-head{display:flex;align-items:center;gap:12px;}
+.crew-avatar{width:42px;height:42px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;font-family:var(--font-mono);flex-shrink:0;}
+.crew-name-block{flex:1;min-width:0;}
+.crew-name-block .cname{font-size:16px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.crew-name-block .cstatus{margin-top:4px;display:flex;gap:6px;align-items:center;}
+
+.crew-meta-list{display:flex;flex-direction:column;gap:8px;font-size:12.5px;border-top:1px solid var(--line);padding-top:12px;}
+.crew-meta-item{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.crew-meta-item .m-lbl{color:var(--muted);flex-shrink:0;}
+.crew-meta-item .m-val{color:var(--ink);font-weight:500;text-align:right;}
+
+.crew-platforms{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.plat-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--paper);border:1px solid var(--line);font-size:11px;color:var(--ink);text-decoration:none;border-radius:2px;}
+.plat-pill:hover{border-color:#000;}
+
+.crew-card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line);margin-top:auto;}
+.crew-card-actions{display:flex;gap:6px;align-items:center;}
+
+/* =========================================================
+   BISNIS (DEALS / SPONSORSHIP) - STRUCTURED DESIGN
+   ========================================================= */
+.biz-filter-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;border-bottom:1px solid var(--line);}
+.biz-filter-btn{padding:6px 13px;border:1px solid var(--line);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;border-radius:2px;}
+.biz-filter-btn:hover{background:var(--paper);}
+.biz-filter-btn.active{background:#000;color:#fff;border-color:#000;}
+
+.biz-list{display:flex;flex-direction:column;gap:14px;}
+.biz-card{border:1px solid var(--line);background:#fff;padding:18px 20px;display:flex;flex-direction:column;gap:12px;transition:border-color 0.15s;}
+.biz-card:hover{border-color:#000;}
+.biz-card.is-pinned{border-color:#000;background:#fafafa;}
+.biz-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.biz-company{font-size:16px;font-weight:700;}
+
+.biz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;background:var(--paper);padding:12px 14px;border:1px solid var(--line);}
+.biz-cell{display:flex;flex-direction:column;gap:2px;}
+.biz-cell .b-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;}
+.biz-cell .b-val{font-size:13px;font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
+.biz-cell .b-val.val-highlight{font-family:var(--font-mono);font-size:14px;}
+
+.biz-notes-box{font-size:12.5px;color:var(--ink-soft);padding:8px 12px;border-left:3px solid #000;background:#fafafa;line-height:1.4;white-space:pre-wrap;}
+.biz-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:2px;}
+
+/* Notes grid */
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);}
+.note-card{background:#fff;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:140px;}
+.note-card.is-pinned{background:#fafafa;}
+.note-card .nhead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.note-card .ntitle{font-weight:600;font-size:14px;}
+.note-card .nbody{font-size:13px;color:var(--ink-soft);flex:1;white-space:pre-wrap;overflow-wrap:anywhere;}
+.note-card .nfoot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);font-family:var(--font-mono);}
+.pin-btn{background:none;border:none;cursor:pointer;padding:2px;color:var(--ink);flex-shrink:0;}
+.pin-btn svg{width:15px;height:15px;}
+
+/* Links */
+.link-group-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:26px 0 8px;font-weight:600;}
+.link-group-title:first-child{margin-top:0;}
+.ledger{border-top:1px solid var(--line);}
+.lrow{display:flex;align-items:flex-start;gap:14px;padding:14px 8px;border-bottom:1px solid var(--line);background:#fff;}
+.lrow:hover{background:var(--paper);}
+.lrow.is-pinned{background:#fafafa;}
+.lrow .main{flex:1;min-width:0;}
+.lrow .name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;}
+.lrow .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.lrow .actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+
+/* Growth */
+.talent-select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px;}
+.talent-select-card{border:1px solid var(--line);background:#fff;padding:18px 20px;cursor:pointer;transition:border-color 0.15s, background 0.15s;display:flex;flex-direction:column;gap:8px;}
+.talent-select-card:hover{border-color:#000;background:var(--paper);}
+.talent-select-card .tname{font-weight:600;font-size:16px;}
+.talent-select-card .tmeta{font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;margin-top:4px;}
+.talent-detail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px;}
+.growth-platform-box{border:1px solid var(--line);background:#fff;padding:20px;margin-bottom:24px;}
+.growth-platform-box h3{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.growth-entry{display:flex;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+.growth-entry:last-child{border-bottom:none;}
+.growth-entry .gdate{font-family:var(--font-mono);font-size:11px;color:var(--muted);width:78px;flex-shrink:0;}
+.growth-entry .gplat{font-size:12px;color:var(--muted);width:96px;flex-shrink:0;}
+.growth-entry .gval{font-weight:600;font-size:14px;}
+.growth-entry .gdelta{color:var(--muted);font-weight:400;font-size:11px;margin-left:4px;}
+.growth-entry .gnote{color:var(--ink-soft);font-size:13px;flex:1;}
+.sparkline{display:block;margin:4px 0 16px;}
+
+/* Calendar (Google Calendar style) */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap;}
+.cal-controls{display:flex;align-items:center;gap:8px;}
+.cal-title{font-size:18px;font-weight:600;min-width:180px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line);background:#fff;}
+.cal-weekday{text-align:center;padding:10px 4px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper);letter-spacing:0.5px;}
+.cal-day{min-height:98px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;display:flex;flex-direction:column;gap:4px;position:relative;cursor:pointer;background:#fff;}
+.cal-day:hover{background:var(--paper);}
+.cal-day.other-month{background:#fafafa;color:var(--muted);opacity:0.6;}
+.cal-day.today .day-num{background:#000;color:#fff;border-radius:50%;}
+.day-num{font-size:12px;font-weight:600;font-family:var(--font-mono);width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;}
+.day-events{display:flex;flex-direction:column;gap:3px;overflow:hidden;flex:1;}
+.cal-chip{display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:background 0.15s;}
+.cal-chip:hover{background:#333;}
+.cal-chip .chip-time{font-family:var(--font-mono);font-size:9.5px;opacity:0.8;flex-shrink:0;}
+.cal-chip .chip-title{overflow:hidden;text-overflow:ellipsis;}
+
+/* Dock nav */
+.dock{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #000;z-index:20;overflow-x:auto;}
+.dock-item{flex:1;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px 9px;background:#fff;border:none;border-right:1px solid var(--line);cursor:pointer;color:var(--ink);}
+.dock-item:last-child{border-right:none;}
+.dock-item svg{width:19px;height:19px;opacity:.5;}
+.dock-item span{font-size:10px;letter-spacing:.3px;}
+.dock-item.active{background:#000;color:#fff;}
+.dock-item.active svg{opacity:1;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-panel{background:#fff;border:1.5px solid #000;max-width:480px;width:100%;max-height:86vh;display:flex;flex-direction:column;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0;}
+.modal-head h3{font-size:15px;}
+.modal-body{padding:20px;overflow-y:auto;}
+.modal-close{background:none;border:none;cursor:pointer;padding:4px;color:var(--ink);}
+.modal-close svg{width:16px;height:16px;}
+
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);padding:9px 10px;background:#fff;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#000;}
+.field textarea{resize:vertical;min-height:70px;}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.field-hint{font-size:11px;color:var(--muted);margin-top:6px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;}
+
+.toast{position:fixed;bottom:98px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 18px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:60;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+@media (max-width:600px){
+  .topbar{padding:14px 16px;}
+  .content{padding:22px 16px;}
+  .clock-block{padding:7px 12px;}
+  .clock-time{font-size:16px;}
+  .cal-day{min-height:65px;padding:3px;}
+  .cal-chip .chip-title{display:none;}
+  .cal-chip{padding:2px 4px;justify-content:center;}
+  .biz-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">CREWMATE</span>
+    </div>
+    <div class="ops-panel">
+      <button class="clock-block" id="clock1Btn" title="Klik untuk atur jam">
+        <span class="clock-label" id="clock1Label">—</span>
+        <span class="clock-time" id="clock1Time">--:--:--</span>
+      </button>
+      <div class="ops-divider"></div>
+      <button class="clock-block" id="clock2Btn" title="Klik untuk atur jam">
+        <span class="clock-label" id="clock2Label">—</span>
+        <span class="clock-time" id="clock2Time">--:--:--</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Pengaturan" title="Pengaturan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <line x1="12" y1="2.5" x2="12" y2="5.5"/>
+          <line x1="12" y1="18.5" x2="12" y2="21.5"/>
+          <line x1="2.5" y1="12" x2="5.5" y2="12"/>
+          <line x1="18.5" y1="12" x2="21.5" y2="12"/>
+          <line x1="5" y1="5" x2="7.1" y2="7.1"/>
+          <line x1="16.9" y1="16.9" x2="19" y2="19"/>
+          <line x1="19" y1="5" x2="16.9" y2="7.1"/>
+          <line x1="7.1" y1="16.9" x2="5" y2="19"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="content" id="content"></main>
+
+  <nav class="dock" id="dock">
+    <button class="dock-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17"/><line x1="12" y1="3.5" x2="12" y2="20.5"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="dock-item" data-view="crew">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><circle cx="12" cy="10" r="3"/><polyline points="7,17.5 9,14.3 15,14.3 17,17.5"/></svg>
+      <span>Crew</span>
+    </button>
+    <button class="dock-item" data-view="schedule">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="9" y1="5" x2="9" y2="19" stroke-dasharray="2.2 2.2"/><circle cx="9" cy="5" r="1.1" fill="currentColor" stroke="none"/><circle cx="9" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <span>Jadwal</span>
+    </button>
+    <button class="dock-item" data-view="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3 L15 3 L18 6 L18 21 L6 21 Z"/><path d="M15 3 L15 6 L18 6"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="13.5" x2="15" y2="13.5"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+      <span>Catatan</span>
+    </button>
+    <button class="dock-item" data-view="links">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="9" height="6" rx="3"/><rect x="12" y="9" width="9" height="6" rx="3"/></svg>
+      <span>Link</span>
+    </button>
+    <button class="dock-item" data-view="business">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="4" width="6" height="4"/><rect x="3" y="8" width="18" height="12"/><line x1="3" y1="13.5" x2="21" y2="13.5"/></svg>
+      <span>Bisnis</span>
+    </button>
+    <button class="dock-item" data-view="growth">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,17 9,11.5 13,15.5 20,6"/><polyline points="15,6 20,6 20,11"/></svg>
+      <span>Growth</span>
+    </button>
+  </nav>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <h3 id="modalTitle"></h3>
+        <button class="modal-close" id="modalClose" aria-label="Tutup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Constants ---------- */
+
+var STORAGE_KEY = 'crewmate:data';
+
+var TIMEZONES = [
+  ['Pacific/Midway','Midway'],
+  ['Pacific/Honolulu','Honolulu'],
+  ['America/Anchorage','Anchorage'],
+  ['America/Los_Angeles','Los Angeles'],
+  ['America/Denver','Denver'],
+  ['America/Chicago','Chicago'],
+  ['America/New_York','New York'],
+  ['America/Sao_Paulo','Sao Paulo'],
+  ['UTC','UTC'],
+  ['Europe/London','London'],
+  ['Europe/Paris','Paris'],
+  ['Europe/Berlin','Berlin'],
+  ['Europe/Moscow','Moscow'],
+  ['Africa/Cairo','Cairo'],
+  ['Africa/Johannesburg','Johannesburg'],
+  ['Asia/Dubai','Dubai'],
+  ['Asia/Karachi','Karachi'],
+  ['Asia/Kolkata','Kolkata'],
+  ['Asia/Dhaka','Dhaka'],
+  ['Asia/Bangkok','Bangkok'],
+  ['Asia/Jakarta','Jakarta (WIB)'],
+  ['Asia/Makassar','Makassar (WITA)'],
+  ['Asia/Jayapura','Jayapura (WIT)'],
+  ['Asia/Singapore','Singapore'],
+  ['Asia/Manila','Manila'],
+  ['Asia/Shanghai','Shanghai'],
+  ['Asia/Hong_Kong','Hong Kong'],
+  ['Asia/Taipei','Taipei'],
+  ['Asia/Tokyo','Tokyo'],
+  ['Asia/Seoul','Seoul'],
+  ['Australia/Perth','Perth'],
+  ['Australia/Darwin','Darwin'],
+  ['Australia/Sydney','Sydney'],
+  ['Pacific/Auckland','Auckland']
+];
+
+var CREW_STATUS = {aktif:'Aktif', hiatus:'Hiatus', lulus:'Lulus / Graduate'};
+var BIZ_STATUS = {pending:'Pending', negosiasi:'Negosiasi', deal:'Deal', selesai:'Selesai', batal:'Batal'};
+var LINK_CATS = ['Sosial Media','Peralatan Live','Aset','Referensi','Lainnya'];
+
+var ICON = {
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,20 4,16 15,5 19,9 8,20 4,20"/><line x1="13" y1="7" x2="17" y2="11"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="9" y1="7" x2="9" y2="4.5"/><line x1="9" y1="4.5" x2="15" y2="4.5"/><line x1="15" y1="4.5" x2="15" y2="7"/><polyline points="6,7 7,20 17,20 18,7"/><line x1="10" y1="10.5" x2="10" y2="16.5"/><line x1="14" y1="10.5" x2="14" y2="16.5"/></svg>',
+  pinOutline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><polygon points="12,3 19,6.5 12,10"/></svg>',
+  pinFilled:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21" stroke-width="1.6" stroke-linecap="round"/><polygon points="12,3 19,6.5 12,10"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12"/><polyline points="16,8 16,4 4,4 4,16 8,16"/></svg>',
+  external:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="14,4 20,4 20,10"/><line x1="20" y1="4" x2="11" y2="13"/><polyline points="18,14 18,20 4,20 4,6 10,6"/></svg>',
+  chevronLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  chevronRight:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  drag:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>'
+};
+
+/* ---------- State ---------- */
+
+function defaultState(){
+  return {
+    crew: [], schedule: [], notes: [], links: [], business: [], growth: [],
+    settings: {
+      clock1: { label: 'WIB', tz: 'Asia/Jakarta' },
+      clock2: { label: 'Tokyo', tz: 'Asia/Tokyo' }
+    }
+  };
+}
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    var parsed = JSON.parse(raw);
+    var base = defaultState();
+    return Object.assign(base, parsed, {
+      settings: Object.assign(base.settings, parsed.settings || {})
+    });
+  }catch(e){
+    console.error('Gagal memuat data tersimpan', e);
+    return defaultState();
+  }
+}
+
+var state = loadState();
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    toast('Gagal menyimpan data ke penyimpanan lokal');
+  }
+}
+
+/* ---------- Utilities ---------- */
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function esc(v){
+  if(v === undefined || v === null) return '';
+  return String(v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function labelFor(map, key){ return map[key] || key; }
+
+function fmtDate(d){
+  if(!d) return '';
+  var dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt.getTime())) return d;
+  return dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function toast(msg){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+}
+
+function sparklineSvg(values){
+  if(!values || values.length < 2) return '';
+  var w = 240, h = 44, pad = 4;
+  var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+  var range = (max - min) || 1;
+  var stepX = (w - pad*2) / (values.length - 1);
+  var pts = values.map(function(v,i){
+    var x = pad + i*stepX;
+    var y = h - pad - ((v-min)/range) * (h - pad*2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  });
+  var circles = pts.map(function(p){
+    var parts = p.split(',');
+    return '<circle cx="'+parts[0]+'" cy="'+parts[1]+'" r="2.5" fill="#000"/>';
+  }).join('');
+  return '<svg class="sparkline" viewBox="0 0 '+w+' '+h+'" width="240" height="44">'+
+    '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#000" stroke-width="1.6"/>'+circles+'</svg>';
+}
+
+/* ---------- Pin & Drag-and-Drop Management ---------- */
+
+function togglePin(type, id){
+  var list = state[type];
+  if(!list) return;
+  var item = list.find(function(x){ return x.id === id; });
+  if(!item) return;
+  item.pinned = !item.pinned;
+  saveState();
+  renderCurrentView();
+  toast(item.pinned ? 'Disematkan ke atas' : 'Sematan dilepas');
+}
+
+function reorderCollection(type, srcId, targetId){
+  var list = state[type];
+  if(!list) return;
+  var srcIdx = list.findIndex(function(x){ return x.id === srcId; });
+  var tgtIdx = list.findIndex(function(x){ return x.id === targetId; });
+  if(srcIdx === -1 || tgtIdx === -1) return;
+
+  var item = list.splice(srcIdx, 1)[0];
+  var newTgtIdx = list.findIndex(function(x){ return x.id === targetId; });
+  var targetItem = list[newTgtIdx];
+
+  // Jika ditarik ke dalam grup yang disematkan atau dilepas, samakan status pin
+  if(targetItem && targetItem.pinned !== undefined){
+    item.pinned = !!targetItem.pinned;
+  }
+  // Khusus link, sesuaikan kategori jika ditarik ke kategori lain
+  if(type === 'links' && targetItem && targetItem.category){
+    item.category = targetItem.category;
+  }
+
+  list.splice(newTgtIdx, 0, item);
+  saveState();
+  renderCurrentView();
+  toast('Urutan berhasil dipindahkan');
+}
+
+/* Helper penyortiran: Prioritaskan item yang di-pin, lalu susunan kustom */
+function getSortedList(arr){
+  return arr.slice().sort(function(a,b){
+    return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+  });
+}
+
+/* ---------- Modal ---------- */
+
+function openModal(title, bodyHtml, opts){
+  opts = opts || {};
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalOverlay').classList.add('open');
+  var form = document.getElementById('modalBody').querySelector('form');
+  if(form && opts.onSubmit){
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      opts.onSubmit(new FormData(form), form);
+    });
+  }
+  var firstInput = document.getElementById('modalBody').querySelector('input,select,textarea');
+  if(firstInput){ setTimeout(function(){ firstInput.focus(); }, 30); }
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('modalBody').innerHTML = '';
+}
+
+function confirmDialog(message, onConfirm){
+  openModal('Konfirmasi',
+    '<p style="font-size:14px;margin-bottom:22px;">'+esc(message)+'</p>'+
+    '<div class="modal-actions">'+
+      '<button type="button" class="btn secondary" data-close>Batal</button>'+
+      '<button type="button" class="btn" id="confirmYes">Ya, Lanjutkan</button>'+
+    '</div>'
+  );
+  document.getElementById('confirmYes').addEventListener('click', function(){
+    closeModal();
+    onConfirm();
+  });
+}
+
+/* ---------- Router & State Nav ---------- */
+
+var VIEWS = ['dashboard','crew','schedule','notes','links','business','growth'];
+var currentView = 'dashboard';
+var currentGrowthCrewId = null;
+var currentCalDate = new Date();
+var currentBizFilter = 'semua';
+
+function navigate(view){
+  if(VIEWS.indexOf(view) === -1) return;
+  currentView = view;
+  var items = document.querySelectorAll('.dock-item');
+  for(var i=0;i<items.length;i++){
+    items[i].classList.toggle('active', items[i].dataset.view === view);
+  }
+  renderCurrentView();
+}
+
+function renderCurrentView(){
+  var c = document.getElementById('content');
+  if(currentView === 'dashboard') c.innerHTML = renderDashboard();
+  else if(currentView === 'crew') c.innerHTML = renderCrew();
+  else if(currentView === 'schedule') c.innerHTML = renderSchedule();
+  else if(currentView === 'notes') c.innerHTML = renderNotes();
+  else if(currentView === 'links') c.innerHTML = renderLinks();
+  else if(currentView === 'business') c.innerHTML = renderBusiness();
+  else if(currentView === 'growth') c.innerHTML = renderGrowth();
+}
+
+/* ---------- Dashboard ---------- */
+
+function renderDashboard(){
+  var today = new Date().toISOString().slice(0,10);
+  var activeCrew = state.crew.filter(function(c){ return c.status === 'aktif'; }).length;
+  var upcoming = state.schedule.filter(function(s){ return s.date >= today; })
+    .sort(function(a,b){ return (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')); });
+  var openBiz = state.business.filter(function(b){ return ['pending','negosiasi','deal'].indexOf(b.status) !== -1; }).length;
+  var pinnedCount = state.notes.filter(function(n){ return n.pinned; }).length;
+  var pinnedNotes = state.notes.filter(function(n){ return n.pinned; });
+  var notesToShow = pinnedNotes.length ? pinnedNotes.slice(0,5) : state.notes.slice(0,5);
+
+  var upcomingHtml = upcoming.length ? upcoming.slice(0,5).map(function(s){
+    var crew = state.crew.find(function(c){ return c.id === s.crewId; });
+    return '<div class="mini-row"><span>'+esc(s.title)+(crew?' ('+esc(crew.name)+')':'')+'</span>'+
+      '<span class="t">'+esc(fmtDate(s.date))+(s.time?' '+esc(s.time):'')+'</span></div>';
+  }).join('') : '<div class="empty"><p>Belum ada jadwal mendatang.</p>'+
+    '<button class="btn small secondary" data-action="nav-to" data-target="schedule">Tambah Jadwal</button></div>';
+
+  var notesHtml = notesToShow.length ? notesToShow.map(function(n){
+    return '<div class="mini-row"><span>'+(n.pinned?'📌 ':'')+esc(n.title || n.body.slice(0,40))+'</span>'+
+      '<span class="t">'+esc(fmtDate(n.createdAt.slice(0,10)))+'</span></div>';
+  }).join('') : '<div class="empty"><p>Belum ada catatan.</p>'+
+    '<button class="btn small secondary" data-action="nav-to" data-target="notes">Tambah Catatan</button></div>';
+
+  return ''+
+  '<div class="view-head"><div><h2>Dashboard</h2><p class="hint">Ringkasan operasional hari ini.</p></div></div>'+
+  '<div class="stat-strip">'+
+    '<div class="stat"><div class="stat-num">'+activeCrew+'</div><div class="stat-label">Crew Aktif</div></div>'+
+    '<div class="stat"><div class="stat-num">'+upcoming.length+'</div><div class="stat-label">Jadwal Mendatang</div></div>'+
+    '<div class="stat"><div class="stat-num">'+openBiz+'</div><div class="stat-label">Bisnis Berjalan</div></div>'+
+    '<div class="stat"><div class="stat-num">'+pinnedCount+'</div><div class="stat-label">Catatan Disematkan</div></div>'+
+  '</div>'+
+  '<div class="dash-grid">'+
+    '<div class="dash-panel"><h3>Jadwal Terdekat</h3><div class="mini-list">'+upcomingHtml+'</div></div>'+
+    '<div class="dash-panel"><h3>Catatan Tersemat</h3><div class="mini-list">'+notesHtml+'</div></div>'+
+  '</div>';
+}
+
+/* =========================================================
+   CREW (ROSTER TALENT) - DND & PIN SUPPORT
+   ========================================================= */
+
+function renderCrew(){
+  var list = getSortedList(state.crew);
+  
+  var cards = list.map(function(c){
+    var initial = c.name ? c.name.charAt(0).toUpperCase() : '?';
+    var statusLabel = labelFor(CREW_STATUS, c.status);
+    
+    var platHtml = '';
+    if(c.platforms && c.platforms.length){
+      platHtml = c.platforms.map(function(p){
+        if(p.url){
+          return '<a href="'+esc(p.url)+'" target="_blank" rel="noopener" class="plat-pill" title="Buka '+esc(p.label)+'">'+
+            esc(p.label)+' <svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>';
+        }
+        return '<span class="plat-pill">'+esc(p.label)+'</span>';
+      }).join('');
+    } else {
+      platHtml = '<span style="color:var(--muted);font-size:12px;">Belum ditambahkan</span>';
+    }
+
+    var tagsStr = (c.tags && c.tags.length) ? c.tags.join(', ') : '—';
+
+    return '<div class="crew-card '+(c.pinned?'is-pinned':'')+'" draggable="true" data-draggable="true" data-drag-type="crew" data-id="'+c.id+'">'+
+      '<div class="crew-card-head">'+
+        '<div class="crew-avatar">'+initial+'</div>'+
+        '<div class="crew-name-block">'+
+          '<div class="cname">'+esc(c.name)+'</div>'+
+          '<div class="cstatus">'+
+            '<span class="badge '+c.status+'">'+esc(statusLabel)+'</span>'+
+            (c.pinned ? '<span class="pinned-badge">'+ICON.pinFilled+' Disematkan</span>' : '')+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:3px;align-items:center;">'+
+          '<button class="iconbtn-subtle" data-action="crew-pin" data-id="'+c.id+'" title="'+(c.pinned?'Lepas sematan':'Sematkan ke atas')+'">'+
+            (c.pinned ? ICON.pinFilled : ICON.pinOutline)+
+          '</button>'+
+          '<span class="drag-handle" title="Tarik untuk memindahkan posisi">'+ICON.drag+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="crew-meta-list">'+
+        '<div class="crew-meta-item"><span class="m-lbl">Debut</span><span class="m-val">'+(c.debut ? esc(fmtDate(c.debut)) : '—')+'</span></div>'+
+        '<div class="crew-meta-item"><span class="m-lbl">Genre / Tag</span><span class="m-val">'+esc(tagsStr)+'</span></div>'+
+        '<div style="margin-top:2px;">'+
+          '<div class="m-lbl" style="font-size:11.5px;margin-bottom:4px;">Platform Channel:</div>'+
+          '<div class="crew-platforms">'+platHtml+'</div>'+
+        '</div>'+
+      '</div>'+
+      (c.notes ? '<div style="font-size:12px;color:var(--ink-soft);background:var(--paper);padding:8px 10px;border:1px solid var(--line);border-radius:2px;max-height:60px;overflow:hidden;text-overflow:ellipsis;">'+esc(c.notes)+'</div>' : '')+
+      '<div class="crew-card-foot">'+
+        '<button class="btn ghost small" data-action="crew-open" data-id="'+c.id+'">Detail Profil</button>'+
+        '<div class="crew-card-actions">'+
+          '<button class="iconbtn" data-action="crew-growth-jump" data-id="'+c.id+'" title="Pantau Growth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4,17 9,11.5 13,15.5 20,6"/><polyline points="15,6 20,6 20,11"/></svg></button>'+
+          '<button class="iconbtn" data-action="crew-edit" data-id="'+c.id+'" title="Ubah Profil">'+ICON.edit+'</button>'+
+          '<button class="iconbtn" data-action="crew-delete" data-id="'+c.id+'" title="Hapus">'+ICON.trash+'</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var body = state.crew.length ? '<div class="crew-grid">'+cards+'</div>' :
+    '<div class="empty"><p>Belum ada crew / VTuber yang terdaftar. Tambahkan talent pertama untuk mulai mengelola roster.</p>'+
+    '<button class="btn" data-action="crew-add">Tambah Crew</button></div>';
+
+  return '<div class="view-head"><div><h2>Crew</h2><p class="hint">Roster talent. Tarik (drag & drop) untuk mengatur urutan atau sematkan (pin) ke atas.</p></div>'+
+    '<button class="btn" data-action="crew-add">Tambah Crew</button></div>'+body;
+}
+
+function openCrewForm(id){
+  var existing = id ? state.crew.find(function(c){ return c.id===id; }) : null;
+  var platformsText = existing ? existing.platforms.map(function(p){ return p.label+': '+p.url; }).join('\n') : '';
+  var tagsText = existing ? existing.tags.join(', ') : '';
+  var statusOpts = Object.keys(CREW_STATUS).map(function(k){
+    return '<option value="'+k+'" '+((existing?existing.status:'aktif')===k?'selected':'')+'>'+CREW_STATUS[k]+'</option>';
+  }).join('');
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field"><label>Nama Crew / VTuber</label><input name="name" required placeholder="Nama talent" value="'+esc(existing?existing.name:'')+'"></div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Status</label><select name="status">'+statusOpts+'</select></div>'+
+        '<div class="field"><label>Tanggal Debut</label><input type="date" name="debut" value="'+esc(existing?existing.debut:'')+'"></div>'+
+      '</div>'+
+      '<div class="field"><label>Platform &amp; Link Channel</label>'+
+        '<textarea name="platforms" placeholder="YouTube: https://youtube.com/@nama&#10;Twitch: https://twitch.tv/nama" style="min-height:88px;">'+esc(platformsText)+'</textarea>'+
+        '<div class="field-hint">Format satu per baris: <code>Nama Platform: URL Link</code></div></div>'+
+      '<div class="field"><label>Tag / Karakteristik</label><input name="tags" placeholder="misal: Gaming, ASMR, Music, Seniman" value="'+esc(tagsText)+'"></div>'+
+      '<div class="field"><label>Catatan Manajerial</label><textarea name="notes" placeholder="Catatan sifat, preferensi, kontrak, dsb">'+esc(existing?existing.notes:'')+'</textarea></div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" data-close>Batal</button><button type="submit" class="btn">Simpan</button></div>'+
+    '</form>';
+  openModal(existing?'Ubah Crew':'Tambah Crew', body, {onSubmit:function(fd){
+    var platforms = String(fd.get('platforms')||'').split('\n').map(function(l){return l.trim();}).filter(Boolean).map(function(line){
+      var idx = line.indexOf(':');
+      if(idx === -1) return {label:line, url:''};
+      return {label: line.slice(0,idx).trim(), url: line.slice(idx+1).trim()};
+    });
+    var tags = String(fd.get('tags')||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
+    var obj = {name: fd.get('name').trim(), status: fd.get('status'), debut: fd.get('debut'), platforms: platforms, tags: tags, notes: fd.get('notes').trim()};
+    if(existing){ Object.assign(existing, obj); }
+    else { state.crew.push(Object.assign({id:uid(), pinned:false, createdAt:new Date().toISOString()}, obj)); }
+    saveState(); closeModal(); renderCurrentView(); toast('Crew tersimpan');
+  }});
+}
+
+function deleteCrew(id){
+  state.crew = state.crew.filter(function(c){ return c.id !== id; });
+  saveState(); renderCurrentView(); toast('Crew dihapus');
+}
+
+function openCrewDossier(id){
+  var c = state.crew.find(function(x){ return x.id===id; });
+  if(!c) return;
+  var platformsHtml = c.platforms.length ? c.platforms.map(function(p){
+    return '<div class="mini-row"><span>'+esc(p.label)+'</span>'+
+      (p.url ? '<a href="'+esc(p.url)+'" target="_blank" rel="noopener" class="iconbtn" title="Buka link">'+ICON.external+'</a>' : '')+
+      '</div>';
+  }).join('') : '<p style="font-size:13px;color:var(--muted);">Belum ada platform ditambahkan.</p>';
+  var tagsHtml = c.tags.length ? '<div class="chip-row">'+c.tags.map(function(t){ return '<span class="chip">'+esc(t)+'</span>'; }).join('')+'</div>' : '';
+  var body = ''+
+    '<div class="chip-row" style="margin-bottom:16px;">'+
+      '<span class="badge '+c.status+'">'+esc(labelFor(CREW_STATUS,c.status))+'</span>'+
+      (c.debut ? '<span class="badge">Debut '+esc(fmtDate(c.debut))+'</span>' : '')+
+      (c.pinned ? '<span class="pinned-badge">'+ICON.pinFilled+' Disematkan</span>' : '')+
+    '</div>'+
+    tagsHtml+
+    '<h4 style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:18px 0 8px;">Platform</h4>'+
+    platformsHtml+
+    (c.notes ? '<h4 style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:18px 0 8px;">Catatan</h4><p style="font-size:13px;white-space:pre-wrap;">'+esc(c.notes)+'</p>' : '')+
+    '<div class="modal-actions" style="margin-top:22px;"><button type="button" class="btn secondary" data-close>Tutup</button><button type="button" class="btn" id="dossierEditBtn">Ubah</button></div>';
+  openModal(c.name, body, {});
+  document.getElementById('dossierEditBtn').addEventListener('click', function(){ closeModal(); openCrewForm(id); });
+}
+
+/* =========================================================
+   BISNIS (DEALS / SPONSORSHIP) - DND & PIN SUPPORT
+   ========================================================= */
+
+function renderBusiness(){
+  var rawList = getSortedList(state.business);
+  
+  var filteredList = rawList;
+  if(currentBizFilter !== 'semua'){
+    filteredList = rawList.filter(function(b){ return b.status === currentBizFilter; });
+  }
+
+  var filterKeys = [
+    {key:'semua', label:'Semua ('+rawList.length+')'},
+    {key:'pending', label:'Pending'},
+    {key:'negosiasi', label:'Negosiasi'},
+    {key:'deal', label:'Deal'},
+    {key:'selesai', label:'Selesai'},
+    {key:'batal', label:'Batal'}
+  ];
+
+  var filterTabsHtml = '<div class="biz-filter-bar">'+filterKeys.map(function(f){
+    return '<button class="biz-filter-btn '+(currentBizFilter===f.key?'active':'')+'" data-action="biz-filter" data-filter="'+f.key+'">'+f.label+'</button>';
+  }).join('')+'</div>';
+
+  var cardsHtml = filteredList.map(function(b){
+    var crew = state.crew.find(function(c){ return c.id === b.crewId; });
+    var crewName = crew ? esc(crew.name) : '<span style="color:var(--muted);">Umum / Seluruh Talent</span>';
+    var statusLabel = labelFor(BIZ_STATUS, b.status);
+
+    return '<div class="biz-card '+(b.pinned?'is-pinned':'')+'" draggable="true" data-draggable="true" data-drag-type="business" data-id="'+b.id+'">'+
+      '<div class="biz-card-head">'+
+        '<div>'+
+          '<div class="biz-company">'+esc(b.company)+'</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;">'+
+          '<span class="badge '+b.status+'">'+esc(statusLabel)+'</span>'+
+          (b.pinned ? '<span class="pinned-badge">'+ICON.pinFilled+' Disematkan</span>' : '')+
+          '<button class="iconbtn-subtle" data-action="business-pin" data-id="'+b.id+'" title="'+(b.pinned?'Lepas sematan':'Sematkan ke atas')+'">'+
+            (b.pinned ? ICON.pinFilled : ICON.pinOutline)+
+          '</button>'+
+          '<span class="drag-handle" title="Tarik untuk memindahkan">'+ICON.drag+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="biz-grid">'+
+        '<div class="biz-cell">'+
+          '<span class="b-lbl">Talent / Target</span>'+
+          '<span class="b-val">'+crewName+'</span>'+
+        '</div>'+
+        '<div class="biz-cell">'+
+          '<span class="b-lbl">Nilai / Kompensasi</span>'+
+          '<span class="b-val val-highlight">'+(b.value ? esc(b.value) : '<span style="color:var(--muted);font-weight:400;">Belum dicatat</span>')+'</span>'+
+        '</div>'+
+        '<div class="biz-cell">'+
+          '<span class="b-lbl">Kontak / PIC Brand</span>'+
+          '<span class="b-val">'+(b.contact ? esc(b.contact) : '<span style="color:var(--muted);font-weight:400;">—</span>')+'</span>'+
+        '</div>'+
+        '<div class="biz-cell">'+
+          '<span class="b-lbl">Tanggal / Target Deal</span>'+
+          '<span class="b-val">'+(b.date ? esc(fmtDate(b.date)) : '<span style="color:var(--muted);font-weight:400;">—</span>')+'</span>'+
+        '</div>'+
+      '</div>'+
+      (b.notes ? '<div class="biz-notes-box"><strong>Brief / Catatan:</strong><br>'+esc(b.notes)+'</div>' : '')+
+      '<div class="biz-card-foot">'+
+        '<div style="font-size:11px;color:var(--muted);">Tarik ikon ⋮⋮ untuk ubah urutan</div>'+
+        '<div style="display:flex;gap:6px;">'+
+          '<button class="iconbtn" data-action="business-edit" data-id="'+b.id+'" title="Ubah Data">'+ICON.edit+'</button>'+
+          '<button class="iconbtn" data-action="business-delete" data-id="'+b.id+'" title="Hapus">'+ICON.trash+'</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var body = filteredList.length ? '<div class="biz-list">'+cardsHtml+'</div>' :
+    '<div class="empty"><p>Tidak ada data bisnis pada kategori ini.</p>'+
+    '<button class="btn" data-action="business-add">Tambah Peluang Bisnis</button></div>';
+
+  return '<div class="view-head"><div><h2>Bisnis &amp; Sponsorship</h2><p class="hint">Kelola brand deal tiap talent. Geser (drag & drop) untuk menyusun prioritas kerja.</p></div>'+
+    '<button class="btn" data-action="business-add">Tambah Bisnis</button></div>'+
+    filterTabsHtml + body;
+}
+
+function openBusinessForm(id){
+  var existing = id ? state.business.find(function(b){ return b.id===id; }) : null;
+  var crewOpts = '<option value="">Umum (Tidak terkait crew tertentu)</option>'+state.crew.map(function(c){
+    return '<option value="'+c.id+'" '+((existing&&existing.crewId===c.id)?'selected':'')+'>'+esc(c.name)+'</option>';
+  }).join('');
+  var statusOpts = Object.keys(BIZ_STATUS).map(function(k){
+    var sel = existing ? (existing.status===k) : (k==='pending');
+    return '<option value="'+k+'" '+(sel?'selected':'')+'>'+BIZ_STATUS[k]+'</option>';
+  }).join('');
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field"><label>Nama Perusahaan / Brand Sponsor</label><input name="company" required placeholder="misal: Logitech, Hoyoverse, Brand X" value="'+esc(existing?existing.company:'')+'"></div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Status Deal</label><select name="status">'+statusOpts+'</select></div>'+
+        '<div class="field"><label>Crew / VTuber Terkait</label><select name="crewId">'+crewOpts+'</select></div>'+
+      '</div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Nilai / Kompensasi</label><input name="value" placeholder="misal: Rp 5.000.000 atau Barter Barang" value="'+esc(existing?existing.value:'')+'"></div>'+
+        '<div class="field"><label>Tanggal Deal / Eksekusi</label><input type="date" name="date" value="'+esc(existing?existing.date:'')+'"></div>'+
+      '</div>'+
+      '<div class="field"><label>Kontak PIC (Email / No. HP / Discord)</label><input name="contact" placeholder="misal: sponsor@brand.com / @discord_id" value="'+esc(existing?existing.contact:'')+'"></div>'+
+      '<div class="field"><label>Catatan / Deliverables (SOW)</label><textarea name="notes" placeholder="Rincian stream sponsor, durasi ad-read, deadline deliverable">'+esc(existing?existing.notes:'')+'</textarea></div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" data-close>Batal</button><button type="submit" class="btn">Simpan Bisnis</button></div>'+
+    '</form>';
+  openModal(existing?'Ubah Data Bisnis':'Tambah Data Bisnis', body, {onSubmit:function(fd){
+    var obj = {company:fd.get('company').trim(), contact:fd.get('contact').trim(), status:fd.get('status'), crewId:fd.get('crewId')||null, date:fd.get('date'), value:fd.get('value').trim(), notes:fd.get('notes').trim()};
+    if(existing){ Object.assign(existing, obj); }
+    else { state.business.push(Object.assign({id:uid(), pinned:false}, obj)); }
+    saveState(); closeModal(); renderCurrentView(); toast('Data bisnis tersimpan');
+  }});
+}
+
+function deleteBusiness(id){
+  state.business = state.business.filter(function(b){ return b.id!==id; });
+  saveState(); renderCurrentView(); toast('Data bisnis dihapus');
+}
+
+/* ---------- Schedule (Google Calendar View) ---------- */
+
+function renderSchedule(){
+  var year = currentCalDate.getFullYear();
+  var month = currentCalDate.getMonth();
+  var monthName = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(currentCalDate);
+
+  var firstDayIndex = new Date(year, month, 1).getDay();
+  var startOffset = (firstDayIndex === 0 ? 6 : firstDayIndex - 1);
+
+  var lastDate = new Date(year, month + 1, 0).getDate();
+  var prevLastDate = new Date(year, month, 0).getDate();
+  var totalCells = Math.ceil((startOffset + lastDate) / 7) * 7;
+
+  var todayStr = new Date().toISOString().slice(0,10);
+  var weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+  var headerDays = weekdays.map(function(w){
+    return '<div class="cal-weekday">'+w+'</div>';
+  }).join('');
+
+  var cells = '';
+  for(var i = 0; i < totalCells; i++){
+    var d, cellMonth = month, cellYear = year, isOther = false;
+
+    if(i < startOffset){
+      d = prevLastDate - startOffset + i + 1;
+      cellMonth = month - 1;
+      isOther = true;
+    } else if(i >= startOffset + lastDate){
+      d = i - (startOffset + lastDate) + 1;
+      cellMonth = month + 1;
+      isOther = true;
+    } else {
+      d = i - startOffset + 1;
+    }
+
+    var cellDateObj = new Date(cellYear, cellMonth, d);
+    var yStr = cellDateObj.getFullYear();
+    var mStr = String(cellDateObj.getMonth() + 1).padStart(2, '0');
+    var dStr = String(cellDateObj.getDate()).padStart(2, '0');
+    var dateKey = yStr + '-' + mStr + '-' + dStr;
+
+    var isToday = (dateKey === todayStr);
+
+    var dayEvents = state.schedule.filter(function(s){ return s.date === dateKey; })
+      .sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+
+    var eventsHtml = dayEvents.map(function(s){
+      var crew = state.crew.find(function(c){ return c.id === s.crewId; });
+      var titleText = esc(s.title) + (crew ? ' (' + esc(crew.name) + ')' : '');
+      return '<div class="cal-chip" data-action="schedule-edit" data-id="'+s.id+'" title="'+titleText+'">'+
+        (s.time ? '<span class="chip-time">'+esc(s.time)+'</span> ' : '')+
+        '<span class="chip-title">'+titleText+'</span>'+
+      '</div>';
+    }).join('');
+
+    cells += '<div class="cal-day '+(isOther?'other-month':'')+' '+(isToday?'today':'')+'" data-action="cal-cell-click" data-date="'+dateKey+'">'+
+      '<span class="day-num">'+d+'</span>'+
+      '<div class="day-events">'+eventsHtml+'</div>'+
+    '</div>';
+  }
+
+  return ''+
+    '<div class="view-head">'+
+      '<div><h2>Jadwal</h2><p class="hint">Kalender agenda live, meeting, dan acara crew.</p></div>'+
+      '<button class="btn" data-action="schedule-add">Tambah Jadwal</button>'+
+    '</div>'+
+    '<div class="cal-nav">'+
+      '<div class="cal-title">'+monthName+'</div>'+
+      '<div class="cal-controls">'+
+        '<button class="btn ghost small" data-action="cal-today">Hari Ini</button>'+
+        '<button class="iconbtn" data-action="cal-prev" title="Bulan Sebelumnya">'+ICON.chevronLeft+'</button>'+
+        '<button class="iconbtn" data-action="cal-next" title="Bulan Selanjutnya">'+ICON.chevronRight+'</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="cal-grid">'+headerDays + cells+'</div>';
+}
+
+function openScheduleForm(id, defaultDate){
+  var existing = id ? state.schedule.find(function(s){ return s.id===id; }) : null;
+  var crewOpts = '<option value="">Tidak terkait crew tertentu</option>'+state.crew.map(function(c){
+    return '<option value="'+c.id+'" '+((existing&&existing.crewId===c.id)?'selected':'')+'>'+esc(c.name)+'</option>';
+  }).join('');
+
+  var initDate = existing ? existing.date : (defaultDate || new Date().toISOString().slice(0,10));
+
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field"><label>Judul</label><input name="title" required value="'+esc(existing?existing.title:'')+'"></div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Tanggal</label><input type="date" name="date" required value="'+esc(initDate)+'"></div>'+
+        '<div class="field"><label>Waktu</label><input type="time" name="time" value="'+esc(existing?existing.time:'')+'"></div>'+
+      '</div>'+
+      '<div class="field"><label>Crew Terkait</label><select name="crewId">'+crewOpts+'</select></div>'+
+      '<div class="field"><label>Catatan</label><textarea name="notes">'+esc(existing?existing.notes:'')+'</textarea></div>'+
+      '<div class="modal-actions">'+
+        (existing ? '<button type="button" class="btn ghost" id="delSchedBtn" style="margin-right:auto;">Hapus</button>' : '')+
+        '<button type="button" class="btn secondary" data-close>Batal</button>'+
+        '<button type="submit" class="btn">Simpan</button>'+
+      '</div>'+
+    '</form>';
+  openModal(existing?'Ubah Jadwal':'Tambah Jadwal', body, {onSubmit:function(fd){
+    var obj = {title:fd.get('title').trim(), date:fd.get('date'), time:fd.get('time'), crewId:fd.get('crewId')||null, notes:fd.get('notes').trim()};
+    if(existing){ Object.assign(existing, obj); }
+    else { state.schedule.push(Object.assign({id:uid(), createdAt:new Date().toISOString()}, obj)); }
+    saveState(); closeModal(); renderCurrentView(); toast('Jadwal tersimpan');
+  }});
+
+  if(existing){
+    document.getElementById('delSchedBtn').addEventListener('click', function(){
+      confirmDialog('Hapus jadwal ini?', function(){ deleteSchedule(id); closeModal(); });
+    });
+  }
+}
+
+function deleteSchedule(id){
+  state.schedule = state.schedule.filter(function(s){ return s.id!==id; });
+  saveState(); renderCurrentView(); toast('Jadwal dihapus');
+}
+
+/* =========================================================
+   NOTES (CATATAN) - DND & PIN SUPPORT
+   ========================================================= */
+
+function renderNotes(){
+  var sorted = getSortedList(state.notes);
+
+  var cards = sorted.map(function(n){
+    return '<div class="note-card '+(n.pinned?'is-pinned':'')+'" draggable="true" data-draggable="true" data-drag-type="notes" data-id="'+n.id+'">'+
+      '<div class="nhead">'+
+        '<div class="ntitle">'+(n.pinned?'📌 ':'')+esc(n.title||'Tanpa judul')+'</div>'+
+        '<div style="display:flex;align-items:center;gap:4px;">'+
+          '<button class="pin-btn" data-action="note-pin" data-id="'+n.id+'" title="'+(n.pinned?'Lepas sematan':'Sematkan')+'">'+
+            (n.pinned?ICON.pinFilled:ICON.pinOutline)+
+          '</button>'+
+          '<span class="drag-handle" title="Tarik untuk memindahkan">'+ICON.drag+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="nbody">'+esc(n.body)+'</div>'+
+      '<div class="nfoot"><span>'+esc(fmtDate(n.createdAt.slice(0,10)))+'</span>'+
+      '<span class="actions" style="display:flex;gap:6px;">'+
+      '<button class="iconbtn" data-action="note-edit" data-id="'+n.id+'" title="Ubah">'+ICON.edit+'</button>'+
+      '<button class="iconbtn" data-action="note-delete" data-id="'+n.id+'" title="Hapus">'+ICON.trash+'</button>'+
+      '</span></div></div>';
+  }).join('');
+
+  var body = state.notes.length ? '<div class="notes-grid">'+cards+'</div>' :
+    '<div class="empty"><p>Belum ada catatan. Simpan ide konten, pengingat, atau hal kecil yang perlu diingat.</p>'+
+    '<button class="btn" data-action="note-add">Tambah Catatan</button></div>';
+
+  return '<div class="view-head"><div><h2>Catatan</h2><p class="hint">Ide, pengingat, dan catatan operasional. Tarik (drag & drop) untuk mengatur urutan.</p></div>'+
+    '<button class="btn" data-action="note-add">Tambah Catatan</button></div>'+body;
+}
+
+function openNoteForm(id){
+  var existing = id ? state.notes.find(function(n){ return n.id===id; }) : null;
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field"><label>Judul (opsional)</label><input name="title" value="'+esc(existing?existing.title:'')+'"></div>'+
+      '<div class="field"><label>Isi Catatan</label><textarea name="body" required style="min-height:120px;">'+esc(existing?existing.body:'')+'</textarea></div>'+
+      '<div class="field" style="display:flex;align-items:center;gap:8px;">'+
+        '<input type="checkbox" name="pinned" id="pinnedCk" '+(existing&&existing.pinned?'checked':'')+' style="width:auto;">'+
+        '<label for="pinnedCk" style="margin:0;text-transform:none;font-size:13px;color:var(--ink);">Sematkan catatan ini</label>'+
+      '</div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" data-close>Batal</button><button type="submit" class="btn">Simpan</button></div>'+
+    '</form>';
+  openModal(existing?'Ubah Catatan':'Tambah Catatan', body, {onSubmit:function(fd){
+    var obj = {title:fd.get('title').trim(), body:fd.get('body').trim(), pinned: fd.get('pinned')==='on'};
+    if(existing){ Object.assign(existing, obj); }
+    else { state.notes.push(Object.assign({id:uid(), createdAt:new Date().toISOString()}, obj)); }
+    saveState(); closeModal(); renderCurrentView(); toast('Catatan tersimpan');
+  }});
+}
+
+function deleteNote(id){
+  state.notes = state.notes.filter(function(n){ return n.id!==id; });
+  saveState(); renderCurrentView(); toast('Catatan dihapus');
+}
+
+/* =========================================================
+   LINKS (LINK PENTING) - DND & PIN SUPPORT
+   ========================================================= */
+
+function renderLinks(){
+  var sortedLinks = getSortedList(state.links);
+  var grouped = {};
+  sortedLinks.forEach(function(l){ (grouped[l.category] = grouped[l.category] || []).push(l); });
+  var usedCats = Object.keys(grouped).sort(function(a,b){ return LINK_CATS.indexOf(a) - LINK_CATS.indexOf(b); });
+  
+  var out = '';
+  usedCats.forEach(function(cat){
+    out += '<div class="link-group-title">'+esc(cat)+'</div><div class="ledger">';
+    out += grouped[cat].map(function(l){
+      return '<div class="lrow '+(l.pinned?'is-pinned':'')+'" draggable="true" data-draggable="true" data-drag-type="links" data-id="'+l.id+'">'+
+        '<span class="drag-handle" title="Tarik untuk memindahkan">'+ICON.drag+'</span>'+
+        '<div class="main">'+
+          '<div class="name">'+
+            esc(l.label)+
+            (l.pinned ? '<span class="pinned-badge">'+ICON.pinFilled+' Disematkan</span>' : '')+
+          '</div>'+
+          '<div class="sub">'+esc(l.url)+'</div>'+
+        '</div>'+
+        '<div class="actions">'+
+          '<button class="iconbtn" data-action="link-pin" data-id="'+l.id+'" title="'+(l.pinned?'Lepas sematan':'Sematkan ke atas')+'">'+
+            (l.pinned ? ICON.pinFilled : ICON.pinOutline)+
+          '</button>'+
+          '<button class="iconbtn" data-action="link-copy" data-id="'+l.id+'" title="Salin link">'+ICON.copy+'</button>'+
+          '<a class="iconbtn" href="'+esc(l.url)+'" target="_blank" rel="noopener" title="Buka link">'+ICON.external+'</a>'+
+          '<button class="iconbtn" data-action="link-edit" data-id="'+l.id+'" title="Ubah">'+ICON.edit+'</button>'+
+          '<button class="iconbtn" data-action="link-delete" data-id="'+l.id+'" title="Hapus">'+ICON.trash+'</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+    out += '</div>';
+  });
+  
+  var body = state.links.length ? out :
+    '<div class="empty"><p>Belum ada link tersimpan. Simpan link sosial media, tools, aset, atau referensi penting di sini.</p>'+
+    '<button class="btn" data-action="link-add">Tambah Link</button></div>';
+    
+  return '<div class="view-head"><div><h2>Link</h2><p class="hint">Kumpulan link cepat. Tarik (drag & drop) untuk mengatur urutan.</p></div>'+
+    '<button class="btn" data-action="link-add">Tambah Link</button></div>'+body;
+}
+
+function openLinkForm(id){
+  var existing = id ? state.links.find(function(l){ return l.id===id; }) : null;
+  var catOpts = LINK_CATS.map(function(c){
+    return '<option value="'+c+'" '+((existing?existing.category:LINK_CATS[0])===c?'selected':'')+'>'+c+'</option>';
+  }).join('');
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field"><label>Kategori</label><select name="category">'+catOpts+'</select></div>'+
+      '<div class="field"><label>Nama Link</label><input name="label" required value="'+esc(existing?existing.label:'')+'"></div>'+
+      '<div class="field"><label>URL</label><input type="url" name="url" required placeholder="https://..." value="'+esc(existing?existing.url:'')+'"></div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" data-close>Batal</button><button type="submit" class="btn">Simpan</button></div>'+
+    '</form>';
+  openModal(existing?'Ubah Link':'Tambah Link', body, {onSubmit:function(fd){
+    var obj = {category:fd.get('category'), label:fd.get('label').trim(), url:fd.get('url').trim()};
+    if(existing){ Object.assign(existing, obj); }
+    else { state.links.push(Object.assign({id:uid(), pinned:false}, obj)); }
+    saveState(); closeModal(); renderCurrentView(); toast('Link tersimpan');
+  }});
+}
+
+function deleteLink(id){
+  state.links = state.links.filter(function(l){ return l.id!==id; });
+  saveState(); renderCurrentView(); toast('Link dihapus');
+}
+
+function copyLink(id){
+  var l = state.links.find(function(x){ return x.id===id; });
+  if(!l) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(l.url).then(function(){ toast('Link disalin'); }).catch(function(){ toast('Gagal menyalin link'); });
+  }
+}
+
+/* ---------- Growth (Perkembangan Talent: YouTube & Twitch) ---------- */
+
+function renderGrowth(){
+  if(state.crew.length === 0){
+    return '<div class="view-head"><div><h2>Perkembangan Talent</h2><p class="hint">Pantau progres VTuber dari waktu ke waktu.</p></div></div>'+
+      '<div class="empty"><p>Belum ada crew/VTuber yang terdaftar. Tambahkan talent terlebih dahulu di menu Crew.</p>'+
+      '<button class="btn" data-action="nav-to" data-target="crew">Buka Menu Crew</button></div>';
+  }
+
+  if(!currentGrowthCrewId || !state.crew.find(function(c){ return c.id === currentGrowthCrewId; })){
+    var talentCards = getSortedList(state.crew).map(function(c){
+      var count = state.growth.filter(function(g){ return g.crewId === c.id; }).length;
+      return '<div class="talent-select-card" data-action="growth-select" data-id="'+c.id+'">'+
+        '<div class="tname">'+(c.pinned?'📌 ':'')+esc(c.name)+'</div>'+
+        '<div class="tmeta">'+
+          '<span class="badge '+c.status+'">'+esc(labelFor(CREW_STATUS, c.status))+'</span>'+
+          '<span>'+count+' catatan metrik</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    return ''+
+      '<div class="view-head">'+
+        '<div><h2>Perkembangan Talent</h2><p class="hint">Pilih salah satu talent/VTuber untuk melihat dan memantau perkembangan metriknya.</p></div>'+
+      '</div>'+
+      '<div class="talent-select-grid">'+talentCards+'</div>';
+  }
+
+  var crew = state.crew.find(function(c){ return c.id === currentGrowthCrewId; });
+  var entries = state.growth.filter(function(g){ return g.crewId === currentGrowthCrewId; });
+  var platforms = ['YouTube', 'Twitch'];
+
+  var platformSections = platforms.map(function(platform){
+    var list = entries.filter(function(g){ return g.platform === platform; })
+      .slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+    var content = '';
+    if(list.length === 0){
+      content = '<p style="font-size:13px;color:var(--muted);padding:10px 0;">Belum ada catatan metrik untuk '+platform+'.</p>';
+    } else {
+      var values = list.map(function(e){ return Number(e.value); });
+      var spark = sparklineSvg(values);
+      var rowsDesc = list.slice().reverse().map(function(e){
+        var ascIdx = list.indexOf(e);
+        var prev = ascIdx > 0 ? list[ascIdx-1] : null;
+        var delta = prev ? (Number(e.value) - Number(prev.value)) : null;
+        var deltaStr = delta===null ? '' : '<span class="gdelta">('+(delta>=0?'+'+delta:delta)+')</span>';
+        return '<div class="growth-entry">'+
+          '<span class="gdate">'+esc(fmtDate(e.date))+'</span>'+
+          '<span class="gplat">'+esc(e.metric||'Nilai')+'</span>'+
+          '<span class="gval">'+esc(Number(e.value).toLocaleString('id-ID'))+deltaStr+'</span>'+
+          '<span class="gnote">'+esc(e.note||'')+'</span>'+
+          '<button class="iconbtn" data-action="growth-delete" data-id="'+e.id+'" title="Hapus" style="margin-left:auto;">'+ICON.trash+'</button>'+
+          '</div>';
+      }).join('');
+      content = spark + rowsDesc;
+    }
+
+    return '<div class="growth-platform-box">'+
+      '<h3>'+platform+'</h3>'+
+      content+
+    '</div>';
+  }).join('');
+
+  return ''+
+    '<div class="talent-detail-header">'+
+      '<div>'+
+        '<button class="btn secondary small" data-action="growth-back" style="margin-bottom:8px;">← Pilih Talent Lain</button>'+
+        '<h2>'+esc(crew.name)+'</h2>'+
+        '<p class="hint">Pemantauan metrik YouTube & Twitch untuk '+esc(crew.name)+'.</p>'+
+      '</div>'+
+      '<button class="btn" data-action="growth-add">Tambah Entri Metrik</button>'+
+    '</div>'+
+    platformSections;
+}
+
+function openGrowthForm(){
+  var crew = state.crew.find(function(c){ return c.id === currentGrowthCrewId; });
+  if(!crew) return;
+
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field">'+
+        '<label>Platform</label>'+
+        '<select name="platform" id="growthPlatformSelect">'+
+          '<option value="YouTube">YouTube</option>'+
+          '<option value="Twitch">Twitch</option>'+
+        '</select>'+
+      '</div>'+
+      '<div class="field-row">'+
+        '<div class="field">'+
+          '<label>Metrik</label>'+
+          '<input name="metric" id="growthMetricInput" value="Subscribers" required placeholder="Subscribers / Followers">'+
+        '</div>'+
+        '<div class="field">'+
+          '<label>Angka / Nilai Metrik</label>'+
+          '<input type="number" name="value" required step="1" placeholder="misal: 1050">'+
+        '</div>'+
+      '</div>'+
+      '<div class="field">'+
+        '<label>Tanggal</label>'+
+        '<input type="date" name="date" required value="'+new Date().toISOString().slice(0,10)+'">'+
+      '</div>'+
+      '<div class="field">'+
+        '<label>Catatan (Opsional)</label>'+
+        '<input name="note" placeholder="misal: Capai target bulanan, pasca stream kolab">'+
+      '</div>'+
+      '<div class="modal-actions">'+
+        '<button type="button" class="btn secondary" data-close>Batal</button>'+
+        '<button type="submit" class="btn">Simpan Data</button>'+
+      '</div>'+
+    '</form>';
+
+  openModal('Tambah Data Metrik: '+esc(crew.name), body, {onSubmit:function(fd){
+    state.growth.push({
+      id: uid(),
+      crewId: currentGrowthCrewId,
+      platform: fd.get('platform'),
+      metric: fd.get('metric').trim() || 'Nilai',
+      value: Number(fd.get('value')),
+      date: fd.get('date'),
+      note: fd.get('note').trim()
+    });
+    saveState(); closeModal(); renderCurrentView(); toast('Entri metrik tersimpan');
+  }});
+
+  var platSelect = document.getElementById('growthPlatformSelect');
+  var metricInput = document.getElementById('growthMetricInput');
+  if(platSelect && metricInput){
+    platSelect.addEventListener('change', function(){
+      if(platSelect.value === 'Twitch' && metricInput.value === 'Subscribers'){
+        metricInput.value = 'Followers';
+      } else if(platSelect.value === 'YouTube' && metricInput.value === 'Followers'){
+        metricInput.value = 'Subscribers';
+      }
+    });
+  }
+}
+
+function deleteGrowthEntry(id){
+  state.growth = state.growth.filter(function(g){ return g.id!==id; });
+  saveState(); renderCurrentView(); toast('Entri dihapus');
+}
+
+/* ---------- Settings ---------- */
+
+function openSettings(){
+  function tzOptions(current){
+    return TIMEZONES.map(function(t){
+      return '<option value="'+t[0]+'" '+(t[0]===current?'selected':'')+'>'+t[1]+'</option>';
+    }).join('');
+  }
+  var body = ''+
+    '<form id="f">'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Label Jam 1</label><input name="c1label" value="'+esc(state.settings.clock1.label)+'"></div>'+
+        '<div class="field"><label>Zona Jam 1</label><select name="c1tz">'+tzOptions(state.settings.clock1.tz)+'</select></div>'+
+      '</div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Label Jam 2</label><input name="c2label" value="'+esc(state.settings.clock2.label)+'"></div>'+
+        '<div class="field"><label>Zona Jam 2</label><select name="c2tz">'+tzOptions(state.settings.clock2.tz)+'</select></div>'+
+      '</div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" data-close>Batal</button><button type="submit" class="btn">Simpan Jam</button></div>'+
+    '</form>'+
+    '<div style="border-top:1px solid var(--line);margin-top:24px;padding-top:20px;">'+
+      '<label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;">Data</label>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+        '<button type="button" class="btn secondary small" id="btnExport">Ekspor Data</button>'+
+        '<button type="button" class="btn secondary small" id="btnImport">Impor Data</button>'+
+        '<button type="button" class="btn ghost small" id="btnReset">Reset Semua Data</button>'+
+      '</div>'+
+      '<input type="file" id="importFile" accept="application/json" style="display:none;">'+
+    '</div>';
+  openModal('Pengaturan', body, {onSubmit:function(fd){
+    state.settings.clock1 = { label: fd.get('c1label').trim() || 'Jam 1', tz: fd.get('c1tz') };
+    state.settings.clock2 = { label: fd.get('c2label').trim() || 'Jam 2', tz: fd.get('c2tz') };
+    saveState(); closeModal(); updateClocks(); toast('Pengaturan jam disimpan');
+  }});
+  document.getElementById('btnExport').addEventListener('click', exportData);
+  document.getElementById('btnImport').addEventListener('click', function(){ document.getElementById('importFile').click(); });
+  document.getElementById('importFile').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        confirmDialog('Mengimpor data akan menimpa seluruh data saat ini di perangkat ini. Lanjutkan?', function(){
+          var base = defaultState();
+          state = Object.assign(base, parsed, { settings: Object.assign(base.settings, parsed.settings||{}) });
+          saveState(); renderCurrentView(); updateClocks(); toast('Data berhasil diimpor');
+        });
+      }catch(err){
+        toast('File tidak valid');
+      }
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    confirmDialog('Semua data akan dihapus permanen dari perangkat ini. Tindakan ini tidak bisa dibatalkan. Lanjutkan?', function(){
+      state = defaultState(); saveState(); renderCurrentView(); updateClocks(); toast('Semua data telah direset');
+    });
+  });
+}
+
+function exportData(){
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'crewmate-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Data diekspor');
+}
+
+/* ---------- Clocks ---------- */
+
+function updateClocks(){
+  updateOneClock(1, state.settings.clock1);
+  updateOneClock(2, state.settings.clock2);
+}
+
+function updateOneClock(n, cfg){
+  var labelEl = document.getElementById('clock'+n+'Label');
+  var timeEl = document.getElementById('clock'+n+'Time');
+  labelEl.textContent = cfg.label || cfg.tz;
+  try{
+    timeEl.textContent = new Intl.DateTimeFormat('en-GB', {timeZone:cfg.tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false}).format(new Date());
+  }catch(e){
+    timeEl.textContent = '--:--:--';
+  }
+}
+
+/* ---------- Global Drag & Drop Handlers ---------- */
+
+var dragSrcEl = null;
+var dragSrcId = null;
+var dragSrcType = null;
+
+function handleDragStart(e){
+  var item = e.target.closest('[data-draggable="true"]');
+  if(!item) return;
+  dragSrcEl = item;
+  dragSrcId = item.dataset.id;
+  dragSrcType = item.dataset.dragType;
+  item.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrcId);
+}
+
+function handleDragOver(e){
+  if(!dragSrcType) return;
+  var targetItem = e.target.closest('[data-draggable="true"]');
+  if(!targetItem || targetItem === dragSrcEl) return;
+  if(targetItem.dataset.dragType !== dragSrcType) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  targetItem.classList.add('drag-over');
+}
+
+function handleDragLeave(e){
+  var targetItem = e.target.closest('[data-draggable="true"]');
+  if(targetItem){
+    targetItem.classList.remove('drag-over');
+  }
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  var targetItem = e.target.closest('[data-draggable="true"]');
+  if(!targetItem || !dragSrcType) return;
+  if(targetItem.dataset.dragType !== dragSrcType) return;
+
+  var targetId = targetItem.dataset.id;
+  if(targetId && targetId !== dragSrcId){
+    reorderCollection(dragSrcType, dragSrcId, targetId);
+  }
+}
+
+function handleDragEnd(e){
+  if(dragSrcEl){
+    dragSrcEl.classList.remove('dragging');
+  }
+  document.querySelectorAll('.drag-over').forEach(function(el){
+    el.classList.remove('drag-over');
+  });
+  dragSrcEl = null;
+  dragSrcId = null;
+  dragSrcType = null;
+}
+
+/* ---------- Event delegation ---------- */
+
+function onContentClick(e){
+  var el = e.target.closest('[data-action]');
+  if(!el) return;
+  var action = el.dataset.action, id = el.dataset.id;
+  if(action === 'nav-to') navigate(el.dataset.target);
+  
+  /* Crew Actions */
+  else if(action === 'crew-add') openCrewForm();
+  else if(action === 'crew-edit') openCrewForm(id);
+  else if(action === 'crew-open') openCrewDossier(id);
+  else if(action === 'crew-delete') confirmDialog('Hapus crew ini beserta datanya dari roster?', function(){ deleteCrew(id); });
+  else if(action === 'crew-pin') togglePin('crew', id);
+  else if(action === 'crew-growth-jump'){
+    currentGrowthCrewId = id;
+    navigate('growth');
+  }
+
+  /* Business Actions */
+  else if(action === 'business-add') openBusinessForm();
+  else if(action === 'business-edit') openBusinessForm(id);
+  else if(action === 'business-delete') confirmDialog('Hapus data bisnis ini?', function(){ deleteBusiness(id); });
+  else if(action === 'business-pin') togglePin('business', id);
+  else if(action === 'biz-filter'){
+    currentBizFilter = el.dataset.filter;
+    renderCurrentView();
+  }
+
+  /* Kalender & Jadwal */
+  else if(action === 'schedule-add') openScheduleForm();
+  else if(action === 'schedule-edit'){ e.stopPropagation(); openScheduleForm(id); }
+  else if(action === 'schedule-delete') confirmDialog('Hapus jadwal ini?', function(){ deleteSchedule(id); });
+  else if(action === 'cal-prev'){
+    currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+    renderCurrentView();
+  }
+  else if(action === 'cal-next'){
+    currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+    renderCurrentView();
+  }
+  else if(action === 'cal-today'){
+    currentCalDate = new Date();
+    renderCurrentView();
+  }
+  else if(action === 'cal-cell-click'){
+    openScheduleForm(null, el.dataset.date);
+  }
+
+  /* Notes */
+  else if(action === 'note-add') openNoteForm();
+  else if(action === 'note-edit') openNoteForm(id);
+  else if(action === 'note-delete') confirmDialog('Hapus catatan ini?', function(){ deleteNote(id); });
+  else if(action === 'note-pin') togglePin('notes', id);
+  
+  /* Links */
+  else if(action === 'link-add') openLinkForm();
+  else if(action === 'link-edit') openLinkForm(id);
+  else if(action === 'link-delete') confirmDialog('Hapus link ini?', function(){ deleteLink(id); });
+  else if(action === 'link-pin') togglePin('links', id);
+  else if(action === 'link-copy') copyLink(id);
+
+  /* Growth Actions */
+  else if(action === 'growth-select'){
+    currentGrowthCrewId = id;
+    renderCurrentView();
+  }
+  else if(action === 'growth-back'){
+    currentGrowthCrewId = null;
+    renderCurrentView();
+  }
+  else if(action === 'growth-add') openGrowthForm();
+  else if(action === 'growth-delete') confirmDialog('Hapus entri ini?', function(){ deleteGrowthEntry(id); });
+}
+
+function init(){
+  document.getElementById('dock').addEventListener('click', function(e){
+    var item = e.target.closest('.dock-item');
+    if(item) navigate(item.dataset.view);
+  });
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('clock1Btn').addEventListener('click', openSettings);
+  document.getElementById('clock2Btn').addEventListener('click', openSettings);
+  document.getElementById('modalOverlay').addEventListener('click', function(e){
+    if(e.target.id === 'modalOverlay') closeModal();
+  });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalBody').addEventListener('click', function(e){
+    if(e.target.closest('[data-close]')) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') closeModal();
+  });
+  document.getElementById('content').addEventListener('click', onContentClick);
+
+  /* Pasang Event Drag and Drop Global */
+  document.addEventListener('dragstart', handleDragStart);
+  document.addEventListener('dragover', handleDragOver);
+  document.addEventListener('dragleave', handleDragLeave);
+  document.addEventListener('drop', handleDrop);
+  document.addEventListener('dragend', handleDragEnd);
+
+  navigate('dashboard');
+  updateClocks();
+  setInterval(updateClocks, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+})();
+</script>
+</body>
+</html>

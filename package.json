@@ -1,0 +1,68 @@
+{
+  "name": "crewmate",
+  "productName": "Crewmate",
+  "version": "1.0.0",
+  "description": "Aplikasi manajemen VTuber offline - crew, jadwal, catatan, link, bisnis, dan perkembangan talent.",
+  "main": "main.js",
+  "author": "Yunan",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:win:publish": "electron-builder --win nsis --x64 --publish always",
+    "dist:linux": "electron-builder --linux AppImage --x64",
+    "dist": "electron-builder --win nsis --linux AppImage --x64"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "id.yunan.crewmate",
+    "productName": "Crewmate",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "app/**/*",
+      "build/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ItsMeYunan",
+        "repo": "Crewmate"
+      }
+    ],
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ItsMeYunan/Crewmate.git"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "build/icon.png",
+      "category": "Utility"
+    }
+  }
+}
