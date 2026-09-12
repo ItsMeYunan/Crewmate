@@ -1,63 +1,42 @@
-# Crewmate — Project Sumber (Electron)
+# Crewmate — VTuber Manager Helper
 
-Ini adalah source project Electron untuk aplikasi desktop **Crewmate**.
-Build siap-pakai (Windows & Linux) sudah disediakan terpisah; folder ini untuk kamu
-yang ingin build ulang, build untuk macOS, atau mengubah tampilan/fitur.
+Aplikasi desktop offline untuk membantu manajer dan talent VTuber dalam mengelola roster crew, jadwal live/meeting, pencatatan bisnis/sponsorship, catatan operasional, dan pemantauan perkembangan metrik (YouTube & Twitch).
 
-## Struktur
+## 📥 Panduan Unduh & Pasang (Windows)
 
-- `app/index.html` — seluruh UI Crewmate (HTML/CSS/JS, satu file, tanpa dependency luar)
-- `main.js` — proses utama Electron (membuka window, tanpa Node API di renderer)
-- `build/icon.png`, `build/icon.ico` — icon aplikasi
-- `package.json` — konfigurasi Electron + electron-builder
+Bagi pengguna yang ingin langsung memakai aplikasi tanpa koding:
 
-Data disimpan otomatis lewat `localStorage` bawaan Electron/Chromium,
-tersimpan lokal di folder data aplikasi pada perangkat masing-masing
-(tidak terkirim ke mana pun).
+### 1. Unduh Aplikasi
+1. Buka halaman rilis terbaru: **[Download Crewmate Versi Terbaru](https://github.com/ItsMeYunan/Crewmate/releases/latest)**.
+2. Pada bagian bawah (di dalam menu **Assets**), klik file berekstensi `.exe`:
+   * Contoh: `Crewmate-Setup-1.0.0.exe`
 
-## Menjalankan langsung (mode development)
+### 2. Cara Pemasangan & Menghindari Layar Biru Windows (SmartScreen)
 
-```
-npm install
-npm start
-```
+Karena aplikasi ini bersifat open-source dan didistribusikan secara independen tanpa sertifikat digital berbayar Microsoft, Windows Defender SmartScreen mungkin akan memunculkan layar biru bertuliskan *"Windows protected your PC"* saat file pertama kali dibuka.
 
-## Build ulang jadi aplikasi
+**Pilih salah satu cara mudah di bawah ini untuk memasangnya:**
 
-```
-npm install
+#### Cara A: Lewat Layar Biru SmartScreen
+1. Buka file instalasi yang telah diunduh.
+2. Jika layar biru muncul, klik teks **"More info"** (*Info selengkapnya*).
+3. Klik tombol **"Run anyway"** (*Tetap jalankan*).
+4. Lanjutkan proses instalasi seperti biasa hingga selesai.
 
-# Windows (menghasilkan .zip berisi Crewmate.exe, portable — tanpa installer)
-npm run dist:win
+#### Cara B: Buka Blokir sebelum Menjalankan (Rekomendasi)
+1. Klik kanan pada file `Crewmate-Setup-x.x.x.exe` yang baru diunduh ➔ pilih **Properties**.
+2. Di tab paling bawah (*General*), centang kotak **Unblock** (*Buka blokir*).
+3. Klik **Apply** lalu **OK**.
+4. Buka kembali file installer, dan instalasi akan berjalan mulus tanpa peringatan layar biru.
 
-# Linux (menghasilkan .AppImage)
-npm run dist:linux
 
-# Kedua-duanya sekaligus
-npm run dist
-```
+## 🔄 Pembaruan Otomatis (In-App Auto Update)
+Anda tidak perlu lagi mengunduh ulang installer secara manual di masa depan. 
+* Saat versi baru dirilis, aplikasi akan otomatis memunculkan notifikasi pembaruan di latar belakang.
+* Cukup klik **"Restart Sekarang"** ketika notifikasi update muncul untuk menerapkan fitur terbaru.
+* Seluruh data jadwal, roster, dan catatan Anda **tetap aman 100%** di laptop Anda dan tidak akan terhapus saat aplikasi diperbarui.
 
-Hasil build akan muncul di folder `dist/`.
 
-### Build untuk macOS
-
-Build macOS idealnya dijalankan langsung di mesin Mac (electron-builder akan
-otomatis membuat target `.app`/`.zip` yang sesuai):
-
-```
-npm run dist -- --mac zip
-```
-
-Tanpa code signing, macOS akan menampilkan peringatan Gatekeeper saat pertama
-kali dibuka — klik kanan pada aplikasi lalu pilih "Open" untuk melewatinya.
-
-## Mengubah tampilan / fitur
-
-Karena UI sepenuhnya ada di `app/index.html` (HTML + CSS + JS vanilla, tanpa
-framework/build step), kamu bisa langsung edit file itu dan jalankan ulang
-`npm start` untuk melihat perubahan — tidak perlu proses compile apa pun.
-
-## Mengganti icon
-
-Ganti `build/icon.png` (disarankan 512x512 atau 1024x1024) dan `build/icon.ico`,
-lalu build ulang.
+## 🛡️ Keamanan & Privasi
+* **100% Offline & Lokal**: Seluruh data yang Anda masukkan disimpan sepenuhnya di komputer Anda (`%APPDATA%/Crewmate`).
+* **Bebas Pelacak**: Aplikasi tidak mengunggah data pribadi Anda ke server mana pun.
